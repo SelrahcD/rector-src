@@ -1,7 +1,41 @@
-1 file with changes
-===================
+2 files with changes
+====================
 
-1) src/Loop.php:13
+1) src/MultipleAssign.php:15
+
+    ---------- begin diff ----------
+@@ @@
+         self::$instance = $loop = Factory::create();
+
+         register_shutdown_function(function () {
+-            $test = array_is_list([]);
++            $arrayIsList = function (array $array) : bool {
++                if (function_exists('array_is_list')) {
++                    return array_is_list($array);
++                }
++                if ($array === []) {
++                    return true;
++                }
++                $current_key = 0;
++                foreach ($array as $key => $noop) {
++                    if ($key !== $current_key) {
++                        return false;
++                    }
++                    ++$current_key;
++                }
++                return true;
++            };
++            $test = $arrayIsList([]);
+         });
+     }
+ }
+    ----------- end diff -----------
+
+Applied rules:
+ * DowngradeArrayIsListRector (https://wiki.php.net/rfc/is_list)
+
+
+2) src/Loop.php:13
 
     ---------- begin diff ----------
 @@ @@
@@ -35,4 +69,4 @@ Applied rules:
  * DowngradeArrayIsListRector (https://wiki.php.net/rfc/is_list)
 
 
- [OK] 1 file would have changed (dry-run) by Rector
+ [OK] 2 files would have changed (dry-run) by Rector

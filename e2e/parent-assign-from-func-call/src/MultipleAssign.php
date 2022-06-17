@@ -16,7 +16,7 @@ final class MultipleAssign
         self::$instance = $loop = Factory::create();
 
         register_shutdown_function(function () {
-            $test = test([]);
+            $test = array_is_list([]);
         });
     }
 }

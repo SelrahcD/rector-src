@@ -13,8 +13,6 @@ use PhpParser\Node\Stmt\Nop;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\NodeVisitorAbstract;
-use PHPStan\Analyser\Scope;
-use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -26,9 +24,8 @@ use Rector\Core\Contract\Rector\PhpRectorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Exclusion\ExclusionManager;
 use Rector\Core\Logging\CurrentRectorProvider;
-use Rector\Core\NodeAnalyzer\ScopeAnalyzer;
-use Rector\Core\NodeAnalyzer\UnreachableStmtAnalyzer;
 use Rector\Core\NodeDecorator\CreatedByRuleDecorator;
+use Rector\Core\NodeManipulator\UnreachableStmtScopeManipulator;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\NodeFactory;
@@ -124,9 +121,7 @@ CODE_SAMPLE;
 
     private RectorOutputStyle $rectorOutputStyle;
 
-    private UnreachableStmtAnalyzer $unreachableStmtAnalyzer;
-
-    private ScopeAnalyzer $scopeAnalyzer;
+    private UnreachableStmtScopeManipulator $unreachableStmtScopeManipulator;
 
     #[Required]
     public function autowire(
@@ -151,8 +146,7 @@ CODE_SAMPLE;
         CreatedByRuleDecorator $createdByRuleDecorator,
         ChangedNodeScopeRefresher $changedNodeScopeRefresher,
         RectorOutputStyle $rectorOutputStyle,
-        UnreachableStmtAnalyzer $unreachableStmtAnalyzer,
-        ScopeAnalyzer $scopeAnalyzer
+        UnreachableStmtScopeManipulator $unreachableStmtScopeManipulator
     ): void {
         $this->nodesToRemoveCollector = $nodesToRemoveCollector;
         $this->nodesToAddCollector = $nodesToAddCollector;
@@ -175,8 +169,7 @@ CODE_SAMPLE;
         $this->createdByRuleDecorator = $createdByRuleDecorator;
         $this->changedNodeScopeRefresher = $changedNodeScopeRefresher;
         $this->rectorOutputStyle = $rectorOutputStyle;
-        $this->unreachableStmtAnalyzer = $unreachableStmtAnalyzer;
-        $this->scopeAnalyzer = $scopeAnalyzer;
+        $this->unreachableStmtScopeManipulator = $unreachableStmtScopeManipulator;
     }
 
     /**
@@ -227,7 +220,7 @@ CODE_SAMPLE;
 
         $this->printDebugCurrentFileAndRule();
 
-        $this->initUnreachableStmtScope($node);
+        $this->unreachableStmtScopeManipulator->initUnreachableStmtScope($node);
 
         $node = $this->refactor($node);
 
@@ -363,53 +356,6 @@ CODE_SAMPLE;
     protected function removeNode(Node $node): void
     {
         $this->nodeRemover->removeNode($node);
-    }
-
-    private function initUnreachableStmtScope(Node $node): void
-    {
-        if ($node instanceof Stmt) {
-            return;
-        }
-
-        if (! $this->scopeAnalyzer->hasScope($node)) {
-            return;
-        }
-
-        $currentStmt = $this->betterNodeFinder->resolveCurrentStatement($node);
-
-        if (! $currentStmt instanceof Stmt) {
-            return;
-        }
-
-        $unreachableStmt = $this->unreachableStmtAnalyzer->resolveUnreachableStmtFromNode($currentStmt);
-
-        if (! $unreachableStmt instanceof Stmt) {
-            return ;
-        }
-
-        /**
-         * when :
-         *     - current Stmt, previous Stmt, or parent Stmt is unreachable
-         *
-         * then:
-         *     - fill Scope of Parent Stmt
-         */
-        $parentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE);
-        while ($parentStmt instanceof Stmt) {
-            if ($parentStmt instanceof UnreachableStatementNode) {
-                $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
-                continue;
-            }
-
-            $scope = $parentStmt->getAttribute(AttributeKey::SCOPE);
-            if (! $scope instanceof Scope) {
-                $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
-                continue;
-            }
-
-            $node->setAttribute(AttributeKey::SCOPE, $scope);
-            break;
-        }
     }
 
     /**
