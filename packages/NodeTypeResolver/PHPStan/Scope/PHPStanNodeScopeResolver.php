@@ -34,6 +34,7 @@ use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Caching\Detector\ChangedFilesDetector;
 use Rector\Caching\FileSystem\DependencyResolver;
+use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\StaticReflection\SourceLocator\ParentAttributeSourceLocator;
 use Rector\Core\StaticReflection\SourceLocator\RenamedClassesSourceLocator;
@@ -101,6 +102,17 @@ final class PHPStanNodeScopeResolver
             $isScopeRefreshing,
             $smartFileInfo
         ): void {
+            if ($node instanceof StmtsAwareInterface && $node->stmts !== null) {
+                foreach ($node->stmts as $stmt) {
+                    $scope = $stmt->getAttribute(AttributeKey::SCOPE);
+                    if ($scope instanceof MutatingScope) {
+                        continue;
+                    }
+
+                    $this->processNodes([$stmt], $smartFileInfo, $mutatingScope);
+                }
+            }
+
             if ($node instanceof Arg) {
                 $node->value->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }

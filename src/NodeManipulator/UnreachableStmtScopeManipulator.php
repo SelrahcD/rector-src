@@ -42,24 +42,7 @@ final class UnreachableStmtScopeManipulator
          * then:
          *     - fill Scope of Parent Stmt
          */
-        $scope = $this->fillScopeFromParent($node);
-
-        if (! $scope instanceof Scope) {
-            return;
-        }
-
-        $previousStmt = $unreachableStmt->getAttribute(AttributeKey::PREVIOUS_NODE);
-
-        while ($previousStmt instanceof Stmt) {
-            $previousStmtScope = $previousStmt->getAttribute(AttributeKey::SCOPE);
-
-            $scope = $previousStmtScope instanceof Scope
-                    ? $previousStmtScope
-                    : $scope;
-
-            $this->fillSubNodeScopeFromStmt($previousStmt, $scope);
-            $previousStmt = $previousStmt->getAttribute(AttributeKey::PARENT_NODE);
-        }
+        $this->fillScopeFromParent($node);
     }
 
     private function fillSubNodeScopeFromStmt(Stmt $stmt, Scope $scope): void
