@@ -76,7 +76,6 @@ final class UnreachableStmtScopeManipulator
         });
     }
 
-
     private function shouldSkip(Node $node): bool
     {
         if ($node instanceof Stmt) {
