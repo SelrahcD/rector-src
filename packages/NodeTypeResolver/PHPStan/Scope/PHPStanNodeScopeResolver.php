@@ -223,8 +223,7 @@ final class PHPStanNodeScopeResolver
         array $stmts,
         SmartFileInfo $smartFileInfo,
         MutatingScope $mutatingScope
-    ): void
-    {
+    ): void {
         foreach ($stmts as $stmt) {
             $scope = $stmt->getAttribute(AttributeKey::SCOPE);
             if ($scope instanceof MutatingScope) {
