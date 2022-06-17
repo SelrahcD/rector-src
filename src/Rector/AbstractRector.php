@@ -387,12 +387,10 @@ CODE_SAMPLE;
 
         /**
          * when :
-         *     - current Stmt is instanceof UnreachableStatementNode
-         *          OR
-         *     - previous Stmt is instanceof UnreachableStatementNode
+         *     - current Stmt, previous Stmt, or parent Stmt is unreachable
          *
          * then:
-         *     - fill Scope with parent of of the current Stmt
+         *     - fill Scope with parent of the current Stmt
          */
         $parentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE);
         while ($parentStmt instanceof Stmt) {
