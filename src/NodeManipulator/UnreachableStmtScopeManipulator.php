@@ -37,7 +37,7 @@ final class UnreachableStmtScopeManipulator
 
         /**
          * when :
-         *     - current Stmt, previous Stmt, or parent Stmt is unreachable
+         *     - current Stmt or previous Stmt is unreachable
          *
          * then:
          *     - fill Scope of Parent Stmt

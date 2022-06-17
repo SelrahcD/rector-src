@@ -26,8 +26,7 @@ final class UnreachableStmtAnalyzer
 
         $previousStmt = $node->getAttribute(AttributeKey::PREVIOUS_NODE);
         if (! $previousStmt instanceof Node) {
-            $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-            return $this->resolveUnreachableStmtFromNode($parentNode);
+            return null;
         }
 
         return $this->resolveUnreachableStmtFromNode($previousStmt);
