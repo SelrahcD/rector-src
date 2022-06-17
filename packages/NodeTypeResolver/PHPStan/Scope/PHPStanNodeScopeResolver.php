@@ -77,21 +77,6 @@ final class PHPStanNodeScopeResolver
 
     /**
      * @param Stmt[] $stmts
-     */
-    private function processStmtsAwareStmts(array $stmts, SmartFileInfo $smartFileInfo, MutatingScope $mutatingScope): void
-    {
-        foreach ($stmts as $stmt) {
-            $scope = $stmt->getAttribute(AttributeKey::SCOPE);
-            if ($scope instanceof MutatingScope) {
-                continue;
-            }
-
-            $this->processNodes([$stmt], $smartFileInfo, $mutatingScope);
-        }
-    }
-
-    /**
-     * @param Stmt[] $stmts
      * @return Stmt[]
      */
     public function processNodes(
@@ -229,6 +214,25 @@ final class PHPStanNodeScopeResolver
         $this->decoratePHPStanNodeScopeResolverWithRenamedClassSourceLocator($this->nodeScopeResolver);
 
         return $this->processNodesWithDependentFiles($smartFileInfo, $stmts, $scope, $nodeCallback);
+    }
+
+    /**
+     * @param Stmt[] $stmts
+     */
+    private function processStmtsAwareStmts(
+        array $stmts,
+        SmartFileInfo $smartFileInfo,
+        MutatingScope $mutatingScope
+    ): void
+    {
+        foreach ($stmts as $stmt) {
+            $scope = $stmt->getAttribute(AttributeKey::SCOPE);
+            if ($scope instanceof MutatingScope) {
+                continue;
+            }
+
+            $this->processNodes([$stmt], $smartFileInfo, $mutatingScope);
+        }
     }
 
     /**
