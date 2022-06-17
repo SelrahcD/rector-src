@@ -227,7 +227,7 @@ CODE_SAMPLE;
 
         $this->printDebugCurrentFileAndRule();
 
-        $this->initScope($node);
+        $this->initUnreachableStmtScope($node);
 
         $node = $this->refactor($node);
 
@@ -365,7 +365,7 @@ CODE_SAMPLE;
         $this->nodeRemover->removeNode($node);
     }
 
-    private function initScope(Node $node): void
+    private function initUnreachableStmtScope(Node $node): void
     {
         if ($node instanceof Stmt) {
             return;
