@@ -8,6 +8,8 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\AssignOp;
+use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
@@ -111,6 +113,14 @@ final class PHPStanNodeScopeResolver
                 $this->processTernary($node, $mutatingScope);
             }
 
+            if ($node instanceof AssignOp) {
+                $node->expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+            }
+
+            if ($node instanceof BinaryOp) {
+                $this->processBinaryOp($node, $mutatingScope);
+            }
+
             if ($node instanceof Arg) {
                 $node->value->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
@@ -121,13 +131,7 @@ final class PHPStanNodeScopeResolver
             }
 
             if ($node instanceof Property) {
-                foreach ($node->props as $propertyProperty) {
-                    $propertyProperty->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-
-                    if ($propertyProperty->default instanceof Expr) {
-                        $propertyProperty->default->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-                    }
-                }
+                $this->processProperty($node, $mutatingScope);
             }
 
             if ($node instanceof Switch_) {
@@ -219,6 +223,23 @@ final class PHPStanNodeScopeResolver
         $this->decoratePHPStanNodeScopeResolverWithRenamedClassSourceLocator($this->nodeScopeResolver);
 
         return $this->processNodesWithDependentFiles($smartFileInfo, $stmts, $scope, $nodeCallback);
+    }
+
+    private function processProperty(Property $property, MutatingScope $mutatingScope): void
+    {
+        foreach ($property->props as $propertyProperty) {
+            $propertyProperty->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+
+            if ($propertyProperty->default instanceof Expr) {
+                $propertyProperty->default->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+            }
+        }
+    }
+
+    private function processBinaryOp(BinaryOp $binaryOp, MutatingScope $mutatingScope): void
+    {
+        $binaryOp->left->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        $binaryOp->right->setAttribute(AttributeKey::SCOPE, $mutatingScope);
     }
 
     private function processTernary(Ternary $ternary, MutatingScope $mutatingScope): void
