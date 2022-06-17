@@ -45,20 +45,6 @@ final class UnreachableStmtScopeManipulator
         $this->fillScopeFromParent($node);
     }
 
-    private function fillSubNodeScopeFromStmt(Stmt $stmt, Scope $scope): void
-    {
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($stmt, function (Node $subNode) use (
-            $scope
-        ): ?Node {
-            if (! $this->scopeAnalyzer->hasScope($subNode)) {
-                return null;
-            }
-
-            $subNode->setAttribute(AttributeKey::SCOPE, $scope);
-            return $subNode;
-        });
-    }
-
     private function shouldSkip(Node $node): bool
     {
         if ($node instanceof Stmt) {
@@ -88,7 +74,7 @@ final class UnreachableStmtScopeManipulator
                 continue;
             }
 
-            $this->fillSubNodeScopeFromStmt($parentNode, $scope);
+            $node->setAttribute(AttributeKey::SCOPE, $scope);
             return $scope;
         }
 
