@@ -76,15 +76,6 @@ final class PHPStanNodeScopeResolver
     ) {
     }
 
-    private function processTernary(Ternary $ternary, MutatingScope $mutatingScope): void
-    {
-        if ($ternary->if instanceof Expr) {
-            $ternary->if->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-        }
-
-        $ternary->else->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-    }
-
     /**
      * @param Stmt[] $stmts
      * @return Stmt[]
@@ -228,6 +219,15 @@ final class PHPStanNodeScopeResolver
         $this->decoratePHPStanNodeScopeResolverWithRenamedClassSourceLocator($this->nodeScopeResolver);
 
         return $this->processNodesWithDependentFiles($smartFileInfo, $stmts, $scope, $nodeCallback);
+    }
+
+    private function processTernary(Ternary $ternary, MutatingScope $mutatingScope): void
+    {
+        if ($ternary->if instanceof Expr) {
+            $ternary->if->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        }
+
+        $ternary->else->setAttribute(AttributeKey::SCOPE, $mutatingScope);
     }
 
     /**
