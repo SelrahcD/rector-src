@@ -381,8 +381,10 @@ CODE_SAMPLE;
             return;
         }
 
-        if (! $this->unreachableStmtAnalyzer->isStmtPHPStanUnreachable($currentStmt)) {
-            return;
+        $unreachableStmt = $this->unreachableStmtAnalyzer->resolveUnreachableStmtFromNode($currentStmt);
+
+        if (! $unreachableStmt instanceof Stmt) {
+            return ;
         }
 
         /**
@@ -390,7 +392,7 @@ CODE_SAMPLE;
          *     - current Stmt, previous Stmt, or parent Stmt is unreachable
          *
          * then:
-         *     - fill Scope with parent of the current Stmt
+         *     - fill Scope of Parent Stmt
          */
         $parentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE);
         while ($parentStmt instanceof Stmt) {
