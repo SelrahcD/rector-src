@@ -34,7 +34,6 @@ use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Caching\Detector\ChangedFilesDetector;
 use Rector\Caching\FileSystem\DependencyResolver;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\StaticReflection\SourceLocator\ParentAttributeSourceLocator;
 use Rector\Core\StaticReflection\SourceLocator\RenamedClassesSourceLocator;
@@ -99,12 +98,9 @@ final class PHPStanNodeScopeResolver
         // skip chain method calls, performance issue: https://github.com/phpstan/phpstan/issues/254
         $nodeCallback = function (Node $node, MutatingScope $mutatingScope) use (
             &$nodeCallback,
-            $isScopeRefreshing
+            $isScopeRefreshing,
+            $smartFileInfo
         ): void {
-            if ($node instanceof StmtsAwareInterface && $node->stmts !== null) {
-                $this->nodeScopeResolver->processNodes($node->stmts, $mutatingScope, $nodeCallback);
-            }
-
             if ($node instanceof Arg) {
                 $node->value->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
@@ -196,9 +192,6 @@ final class PHPStanNodeScopeResolver
             if ($node instanceof Class_ || $node instanceof Interface_ || $node instanceof Enum_) {
                 /** @var MutatingScope $mutatingScope */
                 $mutatingScope = $this->resolveClassOrInterfaceScope($node, $mutatingScope, $isScopeRefreshing);
-
-                $this->nodeScopeResolver->processNodes($node->stmts, $mutatingScope, $nodeCallback);
-                return;
             }
 
             // special case for unreachable nodes
@@ -207,7 +200,7 @@ final class PHPStanNodeScopeResolver
                 $originalStmt->setAttribute(AttributeKey::IS_UNREACHABLE, true);
                 $originalStmt->setAttribute(AttributeKey::SCOPE, $mutatingScope);
 
-                $this->nodeScopeResolver->processNodes([$originalStmt], $mutatingScope, $nodeCallback);
+                $this->processNodes([$originalStmt], $smartFileInfo, $mutatingScope);
             } else {
                 $node->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
