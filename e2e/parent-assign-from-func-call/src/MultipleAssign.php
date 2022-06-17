@@ -1,6 +1,6 @@
 <?php
 
-final class Loop
+final class MultipleAssign
 {
     /**
      * @var LoopInterface
@@ -16,7 +16,7 @@ final class Loop
         self::$instance = $loop = Factory::create();
 
         register_shutdown_function(function () {
-            $test = array_is_list([]);
+            $test = test([]);
         });
     }
 }
