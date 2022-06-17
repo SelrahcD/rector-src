@@ -27,10 +27,6 @@ abstract class AbstractScopeAwareRector extends AbstractRector implements ScopeA
     {
         $scope = $node->getAttribute(AttributeKey::SCOPE);
         if (! $scope instanceof Scope) {
-            $scope = $this->resolveScopeFromUnreachableStatementNode($node);
-        }
-
-        if (! $scope instanceof Scope) {
             $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
 
             $errorMessage = sprintf(
@@ -44,41 +40,5 @@ abstract class AbstractScopeAwareRector extends AbstractRector implements ScopeA
         }
 
         return $this->refactorWithScope($node, $scope);
-    }
-
-    private function resolveScopeFromUnreachableStatementNode(Node $node): ?Scope
-    {
-        $currentStmt = $this->betterNodeFinder->resolveCurrentStatement($node);
-        $unreachableStmtAnalyzer = new UnreachableStmtAnalyzer();
-
-        /**
-         * when :
-         *     - current Stmt is instanceof UnreachableStatementNode
-         *          OR
-         *     - previous Stmt is instanceof UnreachableStatementNode
-         *
-         * then:
-         *     - fill Scope with parent of of the current Stmt
-         */
-        if ($currentStmt instanceof Stmt && $unreachableStmtAnalyzer->isStmtPHPStanUnreachable($currentStmt)) {
-            $parentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE);
-            while ($parentStmt instanceof Stmt) {
-                if ($parentStmt instanceof UnreachableStatementNode) {
-                    $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
-                    continue;
-                }
-
-                $scope = $parentStmt->getAttribute(AttributeKey::SCOPE);
-                if (! $scope instanceof Scope) {
-                    $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
-                    continue;
-                }
-
-                $node->setAttribute(AttributeKey::SCOPE, $scope);
-                return $scope;
-            }
-        }
-
-        return null;
     }
 }

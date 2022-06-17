@@ -13,6 +13,8 @@ use PhpParser\Node\Stmt\Nop;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\NodeVisitorAbstract;
+use PHPStan\Analyser\Scope;
+use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -24,6 +26,8 @@ use Rector\Core\Contract\Rector\PhpRectorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Exclusion\ExclusionManager;
 use Rector\Core\Logging\CurrentRectorProvider;
+use Rector\Core\NodeAnalyzer\ScopeAnalyzer;
+use Rector\Core\NodeAnalyzer\UnreachableStmtAnalyzer;
 use Rector\Core\NodeDecorator\CreatedByRuleDecorator;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
@@ -120,6 +124,10 @@ CODE_SAMPLE;
 
     private RectorOutputStyle $rectorOutputStyle;
 
+    private UnreachableStmtAnalyzer $unreachableStmtAnalyzer;
+
+    private ScopeAnalyzer $scopeAnalyzer;
+
     #[Required]
     public function autowire(
         NodesToRemoveCollector $nodesToRemoveCollector,
@@ -142,7 +150,9 @@ CODE_SAMPLE;
         RectifiedAnalyzer $rectifiedAnalyzer,
         CreatedByRuleDecorator $createdByRuleDecorator,
         ChangedNodeScopeRefresher $changedNodeScopeRefresher,
-        RectorOutputStyle $rectorOutputStyle
+        RectorOutputStyle $rectorOutputStyle,
+        UnreachableStmtAnalyzer $unreachableStmtAnalyzer,
+        ScopeAnalyzer $scopeAnalyzer
     ): void {
         $this->nodesToRemoveCollector = $nodesToRemoveCollector;
         $this->nodesToAddCollector = $nodesToAddCollector;
@@ -165,6 +175,8 @@ CODE_SAMPLE;
         $this->createdByRuleDecorator = $createdByRuleDecorator;
         $this->changedNodeScopeRefresher = $changedNodeScopeRefresher;
         $this->rectorOutputStyle = $rectorOutputStyle;
+        $this->unreachableStmtAnalyzer = $unreachableStmtAnalyzer;
+        $this->scopeAnalyzer = $scopeAnalyzer;
     }
 
     /**
@@ -214,6 +226,8 @@ CODE_SAMPLE;
         $originalAttributes = $node->getAttributes();
 
         $this->printDebugCurrentFileAndRule();
+
+        $this->initScope($node);
 
         $node = $this->refactor($node);
 
@@ -349,6 +363,53 @@ CODE_SAMPLE;
     protected function removeNode(Node $node): void
     {
         $this->nodeRemover->removeNode($node);
+    }
+
+    private function initScope(Node $node): void
+    {
+        if ($node instanceof Stmt) {
+            return;
+        }
+
+        if (! $this->scopeAnalyzer->hasScope($node)) {
+            return;
+        }
+
+        $currentStmt = $this->betterNodeFinder->resolveCurrentStatement($node);
+
+        if (! $currentStmt instanceof Stmt) {
+            return;
+        }
+
+        if (! $this->unreachableStmtAnalyzer->isStmtPHPStanUnreachable($currentStmt)) {
+            return;
+        }
+
+        /**
+         * when :
+         *     - current Stmt is instanceof UnreachableStatementNode
+         *          OR
+         *     - previous Stmt is instanceof UnreachableStatementNode
+         *
+         * then:
+         *     - fill Scope with parent of of the current Stmt
+         */
+        $parentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE);
+        while ($parentStmt instanceof Stmt) {
+            if ($parentStmt instanceof UnreachableStatementNode) {
+                $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
+                continue;
+            }
+
+            $scope = $parentStmt->getAttribute(AttributeKey::SCOPE);
+            if (! $scope instanceof Scope) {
+                $parentStmt = $parentStmt->getAttribute(AttributeKey::PARENT_NODE);
+                continue;
+            }
+
+            $node->setAttribute(AttributeKey::SCOPE, $scope);
+            break;
+        }
     }
 
     /**
