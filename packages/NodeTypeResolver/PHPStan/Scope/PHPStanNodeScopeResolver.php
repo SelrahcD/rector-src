@@ -106,6 +106,10 @@ final class PHPStanNodeScopeResolver
                 $this->processStmtsAwareStmts($node->stmts, $smartFileInfo, $mutatingScope);
             }
 
+            if ($node instanceof Expr\Ternary) {
+                $node->else->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+            }
+
             if ($node instanceof Arg) {
                 $node->value->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
