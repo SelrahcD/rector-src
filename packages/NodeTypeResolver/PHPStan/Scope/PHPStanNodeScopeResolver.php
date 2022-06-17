@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
@@ -106,7 +107,7 @@ final class PHPStanNodeScopeResolver
                 $this->processStmtsAwareStmts($node->stmts, $smartFileInfo, $mutatingScope);
             }
 
-            if ($node instanceof Expr\Ternary) {
+            if ($node instanceof Ternary) {
                 $node->else->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
 
