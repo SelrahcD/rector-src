@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Rector\Core\Rector;
 
 use PhpParser\Node;
-use PhpParser\Node\Stmt;
 use PHPStan\Analyser\Scope;
-use PHPStan\Node\UnreachableStatementNode;
 use Rector\Core\Contract\Rector\ScopeAwarePhpRectorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
-use Rector\Core\NodeAnalyzer\UnreachableStmtAnalyzer;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 
 /**
