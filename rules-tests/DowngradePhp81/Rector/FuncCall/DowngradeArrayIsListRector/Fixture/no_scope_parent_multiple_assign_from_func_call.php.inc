@@ -1,5 +1,7 @@
 <?php
 
+namespace Rector\Tests\DowngradePhp81\Rector\FuncCall\DowngradeArrayIsListRector\Fixture;
+
 final class MultipleAssign
 {
     /**
@@ -24,6 +26,8 @@ final class MultipleAssign
 ?>
 -----
 <?php
+
+namespace Rector\Tests\DowngradePhp81\Rector\FuncCall\DowngradeArrayIsListRector\Fixture;
 
 final class MultipleAssign
 {
