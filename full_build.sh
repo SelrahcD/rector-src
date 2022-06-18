@@ -20,6 +20,10 @@ rm -rf vendor
 composer clear-cache
 
 composer install --ansi
+
+# ensure clear cache
+bin/rector --version --clear-cache
+
 composer install --no-dev --ansi
 
 # early downgrade individual functions
