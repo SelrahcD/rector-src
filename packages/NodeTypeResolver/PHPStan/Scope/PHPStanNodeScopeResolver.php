@@ -106,7 +106,7 @@ final class PHPStanNodeScopeResolver
             $smartFileInfo
         ): void {
             if ($node instanceof StmtsAwareInterface) {
-                $this->processStmtsAwareStmts((array) $node->stmts, $smartFileInfo, $mutatingScope);
+                $this->processStmtsAwareStmts((array) $node->stmts, $smartFileInfo, $mutatingScope, $isScopeRefreshing);
             }
 
             if ($node instanceof Ternary) {
@@ -256,11 +256,12 @@ final class PHPStanNodeScopeResolver
     private function processStmtsAwareStmts(
         array $stmts,
         SmartFileInfo $smartFileInfo,
-        MutatingScope $mutatingScope
+        MutatingScope $mutatingScope,
+        bool $isScopeRefreshing
     ): void {
         foreach ($stmts as $stmt) {
             $scope = $stmt->getAttribute(AttributeKey::SCOPE);
-            if ($scope instanceof MutatingScope) {
+            if ($scope instanceof MutatingScope && ! $isScopeRefreshing) {
                 continue;
             }
 
