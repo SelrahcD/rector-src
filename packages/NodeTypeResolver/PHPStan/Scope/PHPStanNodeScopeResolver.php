@@ -156,16 +156,6 @@ final class PHPStanNodeScopeResolver
                 $node->expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
 
-            // scope is missing on attributes
-            // @todo decorate parent nodes too
-            if ($node instanceof Property) {
-                foreach ($node->attrGroups as $attrGroup) {
-                    foreach ($attrGroup->attrs as $attribute) {
-                        $attribute->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-                    }
-                }
-            }
-
             if ($node instanceof Trait_) {
                 $traitName = $this->resolveClassName($node);
 
@@ -214,7 +204,10 @@ final class PHPStanNodeScopeResolver
                 $originalStmt->setAttribute(AttributeKey::IS_UNREACHABLE, true);
                 $originalStmt->setAttribute(AttributeKey::SCOPE, $mutatingScope);
 
-                $this->processNodes([$originalStmt], $smartFileInfo, $mutatingScope);
+                $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+                if (! $parentNode instanceof StmtsAwareInterface) {
+                    $this->processNodes([$originalStmt], $smartFileInfo, $mutatingScope);
+                }
             } else {
                 $node->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
@@ -232,6 +225,12 @@ final class PHPStanNodeScopeResolver
 
             if ($propertyProperty->default instanceof Expr) {
                 $propertyProperty->default->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+            }
+        }
+
+        foreach ($property->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attribute) {
+                $attribute->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
         }
     }
@@ -259,12 +258,8 @@ final class PHPStanNodeScopeResolver
         SmartFileInfo $smartFileInfo,
         MutatingScope $mutatingScope
     ): void {
+        // Loop on purpose to avoid jump Scope filling
         foreach ($stmts as $stmt) {
-            $scope = $stmt->getAttribute(AttributeKey::SCOPE);
-            if ($scope instanceof MutatingScope) {
-                continue;
-            }
-
             $this->processNodes([$stmt], $smartFileInfo, $mutatingScope);
         }
     }
