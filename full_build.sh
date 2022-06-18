@@ -24,6 +24,9 @@ composer install --ansi
 # ensure clear cache
 bin/rector --version --clear-cache
 
+# ensure remove cache directory
+rm -rf /var/folders/dv/m3gvpzh94t59l94qz3w2dgfr0000gn/T/rector_cached_files
+
 composer install --no-dev --ansi
 
 # early downgrade individual functions
