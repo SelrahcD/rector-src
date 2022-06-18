@@ -60,8 +60,7 @@ final class ChangedNodeScopeRefresher
              * 2. Its current Stmt is Reachable
              */
             $currentStmt = $this->betterNodeFinder->resolveCurrentStatement($node);
-            $unreachableStmt = $this->unreachableStmtAnalyzer->resolveUnreachableStmtFromNode($currentStmt);
-            if (! $unreachableStmt instanceof Stmt) {
+            if (! $this->unreachableStmtAnalyzer->isStmtPHPStanUnreachable($currentStmt)) {
                 $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
                 $errorMessage = sprintf(
                     'Node "%s" with parent of "%s" is missing scope required for scope refresh.',

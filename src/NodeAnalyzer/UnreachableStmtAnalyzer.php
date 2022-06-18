@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\Core\NodeAnalyzer;
 
 use PhpParser\Node;
+use PhpParser\Node\Stmt;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 
 final class UnreachableStmtAnalyzer
@@ -13,22 +14,26 @@ final class UnreachableStmtAnalyzer
      * in case of unreachable stmts, no other node will have available scope
      * recursively check previous expressions, until we find nothing or is_unreachable
      */
-    public function resolveUnreachableStmtFromNode(?Node $node): ?Node
+    public function isStmtPHPStanUnreachable(?Stmt $stmt): bool
     {
-        if (! $node instanceof Node) {
-            return null;
+        if (! $stmt instanceof Stmt) {
+            return false;
         }
 
-        if ($node->getAttribute(AttributeKey::IS_UNREACHABLE) === true) {
+        if ($stmt->getAttribute(AttributeKey::IS_UNREACHABLE) === true) {
             // here the scope is never available for next stmt so we have nothing to refresh
-            return $node;
+            return true;
         }
 
-        $previousStmt = $node->getAttribute(AttributeKey::PREVIOUS_NODE);
+        $previousStmt = $stmt->getAttribute(AttributeKey::PREVIOUS_NODE);
         if (! $previousStmt instanceof Node) {
-            return null;
+            return false;
         }
 
-        return $this->resolveUnreachableStmtFromNode($previousStmt);
+        if ($previousStmt instanceof Stmt) {
+            return $this->isStmtPHPStanUnreachable($previousStmt);
+        }
+
+        return true;
     }
 }
