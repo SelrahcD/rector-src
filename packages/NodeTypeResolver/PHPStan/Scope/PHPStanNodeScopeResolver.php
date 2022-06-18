@@ -258,8 +258,12 @@ final class PHPStanNodeScopeResolver
         SmartFileInfo $smartFileInfo,
         MutatingScope $mutatingScope
     ): void {
-        // Loop on purpose to avoid jump Scope filling
         foreach ($stmts as $stmt) {
+            $scope = $stmt->getAttribute(AttributeKey::SCOPE);
+            if ($scope instanceof MutatingScope) {
+                continue;
+            }
+
             $this->processNodes([$stmt], $smartFileInfo, $mutatingScope);
         }
     }
