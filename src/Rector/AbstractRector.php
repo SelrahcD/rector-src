@@ -25,7 +25,6 @@ use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Exclusion\ExclusionManager;
 use Rector\Core\Logging\CurrentRectorProvider;
 use Rector\Core\NodeDecorator\CreatedByRuleDecorator;
-use Rector\Core\NodeManipulator\UnreachableStmtScopeManipulator;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\NodeFactory;
@@ -121,8 +120,6 @@ CODE_SAMPLE;
 
     private RectorOutputStyle $rectorOutputStyle;
 
-    private UnreachableStmtScopeManipulator $unreachableStmtScopeManipulator;
-
     #[Required]
     public function autowire(
         NodesToRemoveCollector $nodesToRemoveCollector,
@@ -145,8 +142,7 @@ CODE_SAMPLE;
         RectifiedAnalyzer $rectifiedAnalyzer,
         CreatedByRuleDecorator $createdByRuleDecorator,
         ChangedNodeScopeRefresher $changedNodeScopeRefresher,
-        RectorOutputStyle $rectorOutputStyle,
-        UnreachableStmtScopeManipulator $unreachableStmtScopeManipulator
+        RectorOutputStyle $rectorOutputStyle
     ): void {
         $this->nodesToRemoveCollector = $nodesToRemoveCollector;
         $this->nodesToAddCollector = $nodesToAddCollector;
@@ -169,7 +165,6 @@ CODE_SAMPLE;
         $this->createdByRuleDecorator = $createdByRuleDecorator;
         $this->changedNodeScopeRefresher = $changedNodeScopeRefresher;
         $this->rectorOutputStyle = $rectorOutputStyle;
-        $this->unreachableStmtScopeManipulator = $unreachableStmtScopeManipulator;
     }
 
     /**
@@ -219,8 +214,6 @@ CODE_SAMPLE;
         $originalAttributes = $node->getAttributes();
 
         $this->printDebugCurrentFileAndRule();
-
-        $this->unreachableStmtScopeManipulator->initUnreachableStmtScope($node);
 
         $node = $this->refactor($node);
 
